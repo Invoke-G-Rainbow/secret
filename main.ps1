@@ -54,60 +54,97 @@ switch ($Main_input)
 
     1 {
         clear-host
-        write-host "Skript wird gestartet"-ForegroundColor Green
-        Write-Host "Skript aktiv mit Pfeiltasten Rueckstoß anpassen"-ForegroundColor Green
-        write-host "F10 drucken um das Skript zu beenden"-ForegroundColor Cyan
-        write-host "F9 druecken um den Rueckstoß kurzzeitig außer Kraft zu setzten"-ForegroundColor DarkBlue
-        #Global speed ist eine Globale Variable um den Abstand der Pixel aka Speed des ziehens zu setzen
-        $global:speed = 10
-        $global:recoilDisabled = $false
-        $global:previousSpeed = $null
-    
-        #Schleifen des Rueckstoßes 
-        while (-Not (IsKeyDown 121)) {
-    
-        if ($global:recoilDisabled) {
-            if (IsKeyDown 120) {
-                $global:recoilDisabled = $false
-                if ($global:previousSpeed -ne $null) {
-                    $global:speed = $global:previousSpeed
-                    $global:previousSpeed = $null
-                    Write-Host "Recoil aktiviert. Rueckstoß gesetzt auf $($global:speed)" -ForegroundColor Green
-                } else {
-                    Write-Host "Recoil aktiviert. Rueckstoß-Wert war nicht gespeichert." -ForegroundColor magenta
-                }
-                Start-Sleep -Milliseconds 200
+write-host "Skript wird gestartet" -ForegroundColor Green
+Write-Host "Skript aktiv mit Pfeiltasten Rueckstoß anpassen" -ForegroundColor Green
+write-host "F10 drucken um das Skript zu beenden" -ForegroundColor Cyan
+write-host "F9 druecken um den Rueckstoß kurzzeitig außer Kraft zu setzten" -ForegroundColor DarkBlue
+write-host "F7 druecken um den Feinjustierungsmodus zu aktivieren" -ForegroundColor Cyan
+
+# Initialisierung der globalen Variablen
+$global:verticalspeed = 10
+$global:horizontalspeed = 0 
+$global:recoilDisabled = $false
+$global:previousVerticalSpeed = $null
+$global:previousHorizontalSpeed = $null
+$global:preciseMode = $false
+
+# Haupt-Loop des Skripts
+while (-Not (IsKeyDown 121)) { # F10 zum Beenden des Skripts
+
+    # Recoil-Steuerung aktivieren/deaktivieren
+    if ($global:recoilDisabled) {
+        if (IsKeyDown 120) { # F9 Taste
+            # Rückstoß wieder aktivieren
+            $global:recoilDisabled = $false
+            if ($global:previousVerticalSpeed -ne $null -and $global:previousHorizontalSpeed -ne $null) {
+                $global:verticalspeed = $global:previousVerticalSpeed
+                $global:horizontalspeed = $global:previousHorizontalSpeed
+                $global:previousVerticalSpeed = $null
+                $global:previousHorizontalSpeed = $null
+                Write-Host "Recoil aktiviert. Rückstoß gesetzt auf vertikal: $($global:verticalspeed), horizontal: $($global:horizontalspeed)" -ForegroundColor Green
             } else {
-                Start-Sleep -Milliseconds 5
+                Write-Host "Recoil aktiviert. Rückstoß-Wert war nicht gespeichert." -ForegroundColor Magenta
             }
+            Start-Sleep -Milliseconds 200
         } else {
-            if (IsKeyDown 120) {
-                $global:previousSpeed = $global:speed
-                $global:speed = 0
-                $global:recoilDisabled = $true
-                Write-Host "Recoil deaktiviert. Rueckstoß auf 0 gesetzt." -ForegroundColor Red
-                Start-Sleep -Milliseconds 200
-            } else {
-                if ((IsKeyDown 1) -and (IsKeyDown 2)) {
-                    Start-Sleep -Milliseconds 14
-                    #Hier wird die Maus nach unten Bewegt
-                    [Win32]::mouse_event(1, 0, $global:speed, 0, 0) 
-                }
-                #Hier wird die Pfeieltaste nach oben eigelesen und der Wert demsntspraechend veraendert 
-                if (IsKeyDown 38) {
-                    $global:speed += 1
-                    Write-Host "Rueckstoß gesetzt auf $($global:speed)" -ForegroundColor magenta 
-                    Start-Sleep -Milliseconds 200
-                }
-                #Hier wird die Pfeieltaste nach unten eigelesen und der Wert demsntspraechend veraendert 
-                if (IsKeyDown 40) {
-                    $global:speed -= 1
-                    Write-Host "Rueckstoß gesetzt auf $($global:speed)" -ForegroundColor magenta 
-                    Start-Sleep -Milliseconds 200
-                }
-            }
+            Start-Sleep -Milliseconds 5
         }
-        }}
+    } else {
+        # F9 Taste zum Deaktivieren des Recoils
+        if (IsKeyDown 120) { 
+            # Aktuellen Rückstoß speichern und deaktivieren
+            $global:previousVerticalSpeed = $global:verticalspeed
+            $global:previousHorizontalSpeed = $global:horizontalspeed
+            $global:verticalspeed = 0
+            $global:horizontalspeed = 0
+            $global:recoilDisabled = $true
+            Write-Host "Recoil deaktiviert. Rückstoß auf 0 gesetzt." -ForegroundColor Red
+            Start-Sleep -Milliseconds 200
+        }
+
+        # F7 Taste für Feinjustierungsmodus
+        if (IsKeyDown 118) {
+            $global:preciseMode = -not $global:preciseMode
+            $modeStatus = if ($global:preciseMode) {'aktiviert'} else {'deaktiviert'}
+            Write-Host "Feinjustierungsmodus $modeStatus" -ForegroundColor Cyan
+            Start-Sleep -Milliseconds 200
+        }
+
+        # Anpassungswert basierend auf dem Modus festlegen
+        $adjustment = if ($global:preciseMode) {0.1} else {1}
+        # Mausbewegung basierend auf dem Rückstoß
+        if ((IsKeyDown 1) -and (IsKeyDown 2)) {
+            [Win32]::mouse_event(1, $global:horizontalspeed, $global:verticalspeed, 0, 0) 
+            Start-Sleep -Milliseconds 14
+        }
+
+        # Pfeiltasten-Steuerung
+        foreach ($key in 37..40) {
+            if (IsKeyDown $key) {
+                switch ($key) {
+                    37 { $global:horizontalspeed -= $adjustment } # Links
+                    38 { $global:verticalspeed += $adjustment }   # Oben
+                    39 { $global:horizontalspeed += $adjustment } # Rechts
+                    40 { $global:verticalspeed -= $adjustment }   # Unten
+                }
+                # Kleine Werte runden
+                if ([Math]::Abs($global:verticalspeed) -lt 0.001) {
+                    $global:verticalspeed = 0
+                }
+                if ([Math]::Abs($global:horizontalspeed) -lt 0.001) {
+                    $global:horizontalspeed = 0
+                }
+                # Werte auf 2 Dezimalstellen runden
+                $global:verticalspeed = [Math]::Round($global:verticalspeed, 2)
+                $global:horizontalspeed = [Math]::Round($global:horizontalspeed, 2)
+
+                # Ausgabe der aktuellen Werte
+                Write-Host "Rueckstoß gesetzt auf " -ForegroundColor Magenta -NoNewline
+                write-host "Vertikal: $($global:verticalspeed) " -ForegroundColor Yellow -NoNewline
+                write-host "Horizontal: $($global:horizontalspeed)" -ForegroundColor Magenta
+                Start-Sleep -Milliseconds 200                        
+            }
+        }}}}
     2 {
         #Zweiter Main Switch Chase 
             do{
