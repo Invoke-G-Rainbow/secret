@@ -45,7 +45,14 @@ switch ($Main_input)
 
 
     1 {
-        clear-host
+clear-host
+write-host @"
+    ___                  
+   /   |  ________  _____
+  / /| | / ___/ _ \/ ___/
+ / ___ |/ /  /  __/ /__  
+/_/  |_/_/   \___/\___/   
+"@-ForegroundColor cyan
 write-host "Skript wird gestartet" -ForegroundColor Green
 Write-Host "Skript aktiv mit Pfeiltasten Rueckstoß anpassen" -ForegroundColor Green
 write-host "F10 drucken um das Skript zu beenden" -ForegroundColor Cyan
