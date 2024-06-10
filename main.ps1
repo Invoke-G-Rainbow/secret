@@ -19,23 +19,15 @@ Function IsKeyDown($key) {
     return [Convert]::ToBoolean([Win32]::GetAsyncKeyState($key) -band 0x8000)
 }
 
-
-
-
-
-
-
-
-
 do{#do Für falsche Eingabe Schleift zum Ende des Switches 
 #Erster Switch 
 clear-host
 write-host @"
-  _   _   _   _   _   _   _   _   _   _   _   _   _ 
- / \ / \ / \ / \ / \ / \ / \ / \ / \ / \ / \ / \ / \ 
-( R | a | i | n | b | o | w | 6 | S | i | e | g | e )
- \_/ \_/ \_/ \_/ \_/ \_/ \_/ \_/ \_/ \_/ \_/ \_/ \_/
-
+    ___                  
+   /   |  ________  _____
+  / /| | / ___/ _ \/ ___/
+ / ___ |/ /  /  __/ /__  
+/_/  |_/_/   \___/\___/  
 "@-ForegroundColor cyan
 write-host "Bitte 1 druecken um mit Pfeiltasten zu navigieren" -ForegroundColor Magenta
 write-host "Bitte 2 druecken um mit Presets oder zahlen zu navigieren" -ForegroundColor Blue 
